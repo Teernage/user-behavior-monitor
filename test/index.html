@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SDK 集成测试台</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 20px;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      .card {
+        border: 1px solid #ddd;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+      button {
+        padding: 8px 16px;
+        cursor: pointer;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      code {
+        background: #f4f4f4;
+        padding: 2px 5px;
+        border-radius: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>📊 行为监控 SDK 测试台</h1>
+    <p>请确保 <code>node test/server.js</code> 正在运行。</p>
+
+    <div class="card">
+      <h3>1. 点击行为测试</h3>
+      <p>点击下方按钮，观察终端是否收到 <code>behavior: 'click'</code></p>
+      <!-- 自动埋点测试 -->
+      <button data-track-click="add_to_cart">🛒 加入购物车</button>
+      <button data-track-click="play_video" style="background: #28a745">
+        ▶️ 播放视频
+      </button>
+    </div>
+
+    <div class="card">
+      <h3>2. SPA 路由与停留时间测试</h3>
+      <p>
+        点击切换路由，观察是否上报 <code>behavior: 'dwell'</code> (旧页面) 和
+        <code>behavior: 'pv'</code> (新页面)
+      </p>
+      <button id="route-btn">🔄 模拟路由跳转</button>
+      <p>当前虚拟路径: <code id="path-display">/</code></p>
+    </div>
+
+    <!-- 引入构建后的 ESM 模块 -->
+    <script type="module">
+      import { initUserBehaviorMonitor } from '../dist/index.esm.js';
+
+      // 初始化 SDK
+      initUserBehaviorMonitor({
+        projectName: 'monitor-demo-v1',
+        reportUrl: 'http://localhost:3000/report',
+      });
+
+      console.log('✅ SDK 已初始化');
+
+      // 模拟路由跳转逻辑
+      const pathDisplay = document.getElementById('path-display');
+      document.getElementById('route-btn').addEventListener('click', () => {
+        const newPath = '/product/' + Math.floor(Math.random() * 1000);
+
+        // 触发 history 变化，SDK 应该自动捕获
+        history.pushState({}, '', newPath);
+
+        pathDisplay.textContent = newPath;
+        console.log(`👉 路由已切换至: ${newPath}`);
+      });
+    </script>
+  </body>
+</html>
