@@ -145,17 +145,20 @@ const trackSpaBehavior = (projectName: string, reportUrl: string) => {
    * @returns 
    */
   const handleRouteChange = () => {
-
+    // 1. 防抖校验：如果 URL 没变（比如 hashchange 和 popstate 同时触发），直接退出
     if (window.location.href === lastPageUrl) return;
 
-    // 1. 上报前一个页面的停留时间
+    // 2. 结算上一页：上报前一个页面的停留时间
     reportDwellTime(projectName, reportUrl);
 
-    // 2. 更新为新页面的状态
+    // 3. 记录当前 URL 为 referrer (在更新 lastPageUrl 之前！)
+    const referrer = lastPageUrl;
+
+    // 4. 更新状态：保存当前 URL，为下一次跳转做准备
     pageLoadTime = Date.now();
     lastPageUrl = window.location.href;
 
-    // 3. 上报新页面 PV
+    // 5. 记录新页面：上报 PV
     const userId = getUserID();
     const pv = incrementPV();
     sendBehaviorData({
@@ -164,7 +167,7 @@ const trackSpaBehavior = (projectName: string, reportUrl: string) => {
       projectName,
       timestamp: new Date().toISOString(),
       pageUrl: window.location.href,
-      referrer: lastPageUrl, // SPA 内部跳转，来源是上一个页面
+      referrer: referrer, // 这里的 referrer 是跳转前的页面 URL
       pv,
     }, reportUrl);
   };
